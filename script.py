@@ -58,14 +58,32 @@ def find_destinations(text):
     nlp = spacy.load("fr_core_news_sm")
     doc = nlp(text)
     # Use a set to eliminate duplicates and filter short entities
-    destinations = {ent.text for ent in doc.ents if ent.label_ == "LOC" and len(ent.text) > 2}
+    # destinations = {ent.text for ent in doc.ents if ent.label_ == "LOC" and len(ent.text) > 2}
+    destinations = list(set([ent.text for ent in doc.ents if ent.label_ == "LOC"]))
+    destinations = [dest for dest in destinations if len(dest) > 3]
     return list(destinations)
 
-def visit_and_extract_text(driver, url):
+def visit_and_extract_info(driver, url):
     driver.get(url)
-    text_elements = driver.find_elements(By.TAG_NAME, "p")
-    all_text = " ".join([el.text for el in text_elements])
+    time.sleep(2) 
+    content_blocks = driver.find_elements(By.CSS_SELECTOR, "section, article, div")
+    all_text = " ".join([block.text for block in content_blocks if len(block.text) > 100])
     return all_text
+
+def visit_and_extract_descriptions(driver, url):
+    driver.get(url)
+    time.sleep(2)
+
+    text_elements = driver.find_elements(By.CSS_SELECTOR, "p, div, section, article")
+    descriptions = set()  # Remove duplicates
+
+    for element in text_elements:
+        text = element.text
+        if len(text) > 200:
+            descriptions.add(text)
+
+    return list(descriptions)
+
 
 def main():
     chrome_options = Options()
@@ -82,10 +100,12 @@ def main():
     urls = collect_urls(driver)
 
     for url in urls:
-        page_text = visit_and_extract_text(driver, url)
-        destinations = find_destinations(page_text)
-        print(f"URL: {url} - Potential destinations: {destinations}")
-    
+        descriptions = visit_and_extract_descriptions(driver, url)
+        if descriptions:
+            print(f"\nURL: {url}")
+            for description in descriptions[:5]:
+                print(f"Description: {description}")
+
     save_urls_to_csv(urls)
 
     driver.quit()
