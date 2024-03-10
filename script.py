@@ -36,7 +36,11 @@ def search(research, driver):
 
 def collect_urls(driver):
     search_results = driver.find_elements(By.CSS_SELECTOR, 'div#search a')
-    urls = [result.get_attribute('href') for result in search_results]
+    urls = []
+    for result in search_results:
+        href = result.get_attribute('href')
+        if href not in urls:
+            urls.append(href)
     return urls
 
 def save_urls_to_csv(urls, filename='urls.csv'):
