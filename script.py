@@ -75,22 +75,31 @@ def visit_and_extract_descriptions(driver, url):
     driver.get(url)
     time.sleep(2)
 
-    descriptions = []
+    nlp = spacy.load("fr_core_news_sm")
+    descriptions_with_titles = []
+
     try:
         text_elements = driver.find_elements(By.CSS_SELECTOR, "p, div, section, article")
         for element in text_elements:
             try:
                 text = element.text
                 if len(text) > 200:
-                    descriptions.append(text)
+                    doc = nlp(text)
+                    title_candidates = [ent.text for ent in doc.ents if ent.label_ == "LOC"]
+                    title = title_candidates[0] if title_candidates else "Titre non trouvé"
+                    descriptions_with_titles.append((title, text))
             except StaleElementReferenceException:
                 continue  # Pass to next element if element is no longer valid
     except StaleElementReferenceException:
         print("Un problème est survenu avec les éléments de la page.")
 
-    # Filter duplicate descriptions
-    descriptions = list(dict.fromkeys(descriptions))
-    return descriptions
+    # Filter eventual duplicates
+    unique_descriptions_with_titles = []
+    for title, desc in descriptions_with_titles:
+        if (title, desc) not in unique_descriptions_with_titles:
+            unique_descriptions_with_titles.append((title, desc))
+
+    return unique_descriptions_with_titles
 
 def main():
     chrome_options = Options()
@@ -107,11 +116,11 @@ def main():
     urls = collect_urls(driver)
 
     for url in urls:
-        descriptions = visit_and_extract_descriptions(driver, url)
-        if descriptions:
+        descriptions_with_titles = visit_and_extract_descriptions(driver, url)
+        if descriptions_with_titles:
             print(f"\nURL: {url}")
-            for description in descriptions[:5]:
-                print(f"Description: {description}")
+            for title, description in descriptions_with_titles:
+                print(f"Titre: {title}\nDescription: {description}\n\n")
 
     save_urls_to_csv(urls)
 
