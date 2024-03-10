@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 import time
 import csv
 import spacy
@@ -74,16 +75,22 @@ def visit_and_extract_descriptions(driver, url):
     driver.get(url)
     time.sleep(2)
 
-    text_elements = driver.find_elements(By.CSS_SELECTOR, "p, div, section, article")
-    descriptions = set()  # Remove duplicates
+    descriptions = []
+    try:
+        text_elements = driver.find_elements(By.CSS_SELECTOR, "p, div, section, article")
+        for element in text_elements:
+            try:
+                text = element.text
+                if len(text) > 200:
+                    descriptions.append(text)
+            except StaleElementReferenceException:
+                continue  # Pass to next element if element is no longer valid
+    except StaleElementReferenceException:
+        print("Un problème est survenu avec les éléments de la page.")
 
-    for element in text_elements:
-        text = element.text
-        if len(text) > 200:
-            descriptions.add(text)
-
-    return list(descriptions)
-
+    # Filter duplicate descriptions
+    descriptions = list(dict.fromkeys(descriptions))
+    return descriptions
 
 def main():
     chrome_options = Options()
