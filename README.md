@@ -19,7 +19,9 @@ To run this project, ensure you have Python 3 and `pip` installed for dependency
 3. Activate the virtual environment:
    - On Linux or macOS: `source mon_env_chrome/bin/activate`
    - On Windows: `mon_env_chrome\Scripts\activate`
-4. Install Selenium with `pip install selenium`.
+4. Install Dependencies with `pip install -r requirements.txt`.
+
+To save new dependencies into requirements.txt, run `pip freeze > requirements.txt`.
 
 ## ChromeDriver Setup
 
@@ -32,7 +34,7 @@ To run this project, ensure you have Python 3 and `pip` installed for dependency
 
    ```sh
    # Start environment:
-   python3 -m venv mon_env_chrome
+   source mon_env_chrome/bin/activate
 
    # Stop environment:
    deactivate
