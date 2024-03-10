@@ -44,6 +44,7 @@ def save_urls_to_csv(urls, filename='urls.csv'):
         writer = csv.writer(file)
         for url in urls:
             writer.writerow([url])
+            print(f"\t\033[92m✅ URL added:\033[0m {url[:30]}...")
 
 def main():
     chrome_options = Options()
