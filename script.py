@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import csv
+import spacy
 
 def reject_cookies(driver):
     wait = WebDriverWait(driver, 10)
@@ -51,6 +52,21 @@ def save_urls_to_csv(urls, filename='urls.csv'):
             writer.writerow([url])
             print(f"\t\033[92m✅ URL added:\033[0m {url[:30]}...")
 
+# Analyzing page text and finding potential destinations
+def find_destinations(text):
+    # Charge language model
+    nlp = spacy.load("fr_core_news_sm")
+    doc = nlp(text)
+    # Use a set to eliminate duplicates and filter short entities
+    destinations = {ent.text for ent in doc.ents if ent.label_ == "LOC" and len(ent.text) > 2}
+    return list(destinations)
+
+def visit_and_extract_text(driver, url):
+    driver.get(url)
+    text_elements = driver.find_elements(By.TAG_NAME, "p")
+    all_text = " ".join([el.text for el in text_elements])
+    return all_text
+
 def main():
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -64,6 +80,12 @@ def main():
     search("les meilleures destinations de vacances", driver)
 
     urls = collect_urls(driver)
+
+    for url in urls:
+        page_text = visit_and_extract_text(driver, url)
+        destinations = find_destinations(page_text)
+        print(f"URL: {url} - Potential destinations: {destinations}")
+    
     save_urls_to_csv(urls)
 
     driver.quit()
