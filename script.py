@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import csv
 
 def reject_cookies(driver):
     wait = WebDriverWait(driver, 10)
@@ -38,6 +39,12 @@ def collect_urls(driver):
     urls = [result.get_attribute('href') for result in search_results]
     return urls
 
+def save_urls_to_csv(urls, filename='urls.csv'):
+    with open(filename, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        for url in urls:
+            writer.writerow([url])
+
 def main():
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -46,12 +53,12 @@ def main():
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
     driver.get('https://www.google.com')
-    
+
     reject_cookies(driver)
     search("les meilleures destinations de vacances", driver)
-    
+
     urls = collect_urls(driver)
-    print(urls)
+    save_urls_to_csv(urls)
 
     driver.quit()
 

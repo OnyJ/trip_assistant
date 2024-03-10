@@ -7,3 +7,5 @@ chromedriver
 # Others
 __pycache__
 
+# Files generated
+urls.csv
