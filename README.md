@@ -1,12 +1,19 @@
-# Selenium Chrome Automation Project
+# Trip Assitant
 
-This project includes an automation script that uses Selenium to navigate Google using Chrome as the web browser.
+This project is designed to **automate the process of collecting travel destination information from the web**.
+
+Utilizing Python with Selenium WebDriver, spaCy for natural language processing (NLP), and other powerful libraries, it aims to streamline the extraction of valuable data such as destination names and detailed descriptions from various websites. 
+
+The tool allows anyone on chrome to get the best travel descriptions while keeping their hands in their pockets.
+
+## Index
 
 - [Setup](#setup)
 - [Environment Setup](#environment-setup)
 - [ChromeDriver Setup](#chromedriver-setup)
 - [Running the Script](#running-the-script)
 - [Notes](#notes)
+- [Project Features](#project-features)
 
 ## Setup
 
