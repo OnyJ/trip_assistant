@@ -35,11 +35,12 @@ def search(research, driver):
     scroll_to_bottom(driver)
 
 def collect_urls(driver):
-    search_results = driver.find_elements(By.CSS_SELECTOR, 'div#search a')
+    # Modify selector to only target natural search results.
+    search_results = driver.find_elements(By.CSS_SELECTOR, 'div#rso .g a')
     urls = []
     for result in search_results:
         href = result.get_attribute('href')
-        if href not in urls:
+        if href not in urls and 'google.com' not in href:
             urls.append(href)
     return urls
 
