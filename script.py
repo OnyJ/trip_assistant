@@ -75,7 +75,8 @@ def visit_and_extract_descriptions(driver, url):
     time.sleep(2)
 
     nlp = spacy.load("fr_core_news_sm")
-    descriptions_with_titles = []
+    seen = set()  # Set to keep track of unique titles and descriptions
+    unique_descriptions_with_titles = []
 
     try:
         text_elements = driver.find_elements(By.CSS_SELECTOR, "p, div, section, article")
@@ -87,14 +88,16 @@ def visit_and_extract_descriptions(driver, url):
                     title_candidates = [ent.text for ent in doc.ents if ent.label_ == "LOC"]
                     title = title_candidates[0] if title_candidates else "Titre non trouvé"
                     if title != "Titre non trouvé" and len(title) >= 4:
-                        descriptions_with_titles.append((title, text))
+                        key = (title, text)  # Unique key to check for duplicates
+                        if key not in seen:  # Check uniqueness before adding
+                            seen.add(key)
+                            unique_descriptions_with_titles.append(key)
             except StaleElementReferenceException:
                 continue
     except StaleElementReferenceException:
         print("Un problème est survenu avec les éléments de la page.")
 
-    return descriptions_with_titles
-
+    return unique_descriptions_with_titles
 
 def main():
     chrome_options = Options()
