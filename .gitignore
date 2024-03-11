@@ -10,3 +10,5 @@ __pycache__
 # Files generated
 urls.csv
 .~lock.urls.csv#
+descriptions.csv
+

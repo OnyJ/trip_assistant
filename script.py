@@ -46,12 +46,13 @@ def collect_urls(driver):
             urls.append(href)
     return urls
 
-def save_urls_to_csv(urls, filename='urls.csv'):
+def save_urls_to_csv(descriptions_with_titles, filename='descriptions.csv'):
     with open(filename, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        for url in urls:
-            writer.writerow([url])
-            print(f"\t\033[92m✅ URL added:\033[0m {url[:30]}...")
+        writer.writerow(["URL", "Titre", "Description"])  # CSV file header
+        for url, data in descriptions_with_titles.items():
+            for title, description in data:
+                writer.writerow([url, title, description])
 
 # Analyzing page text and finding potential destinations
 def find_destinations(text):
@@ -120,16 +121,16 @@ def main():
                           "enregistrer", "instagram", "lire le suivant", 
                           "voulez", "coutumes", "sommes", "politique", 
                           "saint-valentin", "continuer"]
+    descriptions_with_titles_by_url = {}  # Dictionnaire pour stocker les résultats par URL
 
     for url in urls:
         descriptions_with_titles = visit_and_extract_descriptions(driver, url, elimination_titles)
         if descriptions_with_titles:
-            print(f"\nURL: {url}")
-            for title, description in descriptions_with_titles:
-                print(f"Titre: {title}\nDescription: {description}\n\n")
+            descriptions_with_titles_by_url[url] = descriptions_with_titles
+            for title, _ in descriptions_with_titles:
+                print(f"\t\033[92m✅ Destination added:\033[0m {url[:30]}... {title}")
 
-
-    save_urls_to_csv(urls)
+    save_urls_to_csv(descriptions_with_titles_by_url)
 
     driver.quit()
 
