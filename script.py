@@ -9,6 +9,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 import time
 import csv
 import spacy
+import subprocess
 
 def reject_cookies(driver):
     wait = WebDriverWait(driver, 10)
@@ -46,7 +47,7 @@ def collect_urls(driver):
             urls.append(href)
     return urls
 
-def save_urls_to_csv(descriptions_with_titles, filename='descriptions.csv'):
+def save_urls_to_csv(descriptions_with_titles, filename):
     with open(filename, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(["URL", "Titre", "Description"])  # CSV file header
@@ -102,6 +103,13 @@ def visit_and_extract_descriptions(driver, url, elimination_titles):
 
     return unique_descriptions_with_titles
 
+def open_csv_result(filename):
+    try:
+        subprocess.run(['libreoffice', '--calc', filename], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error opening file with LibreOffice Calc : {e}")
+
+
 def main():
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -115,13 +123,14 @@ def main():
     search("les meilleures destinations de vacances", driver)
 
     urls = collect_urls(driver)
+    final_filename = 'descriptions.csv'
     elimination_titles = ["Titre non trouvé", "types", "soleil", 
                           "hôtel", "accepter", "vedette", "cliquez", 
                           "désolés", "inscrivez", "besoin", "explore", 
                           "enregistrer", "instagram", "lire le suivant", 
                           "voulez", "coutumes", "sommes", "politique", 
                           "saint-valentin", "continuer"]
-    descriptions_with_titles_by_url = {}  # Dictionnaire pour stocker les résultats par URL
+    descriptions_with_titles_by_url = {}
 
     for url in urls:
         descriptions_with_titles = visit_and_extract_descriptions(driver, url, elimination_titles)
@@ -130,9 +139,9 @@ def main():
             for title, _ in descriptions_with_titles:
                 print(f"\t\033[92m✅ Destination added:\033[0m {url[:30]}... {title}")
 
-    save_urls_to_csv(descriptions_with_titles_by_url)
-
+    save_urls_to_csv(descriptions_with_titles_by_url, final_filename)
     driver.quit()
+    open_csv_result(final_filename)
 
 if __name__ == '__main__':
     main()
