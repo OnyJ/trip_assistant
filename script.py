@@ -59,7 +59,6 @@ def find_destinations(text):
     nlp = spacy.load("fr_core_news_sm")
     doc = nlp(text)
     # Use a set to eliminate duplicates and filter short entities
-    # destinations = {ent.text for ent in doc.ents if ent.label_ == "LOC" and len(ent.text) > 2}
     destinations = list(set([ent.text for ent in doc.ents if ent.label_ == "LOC"]))
     destinations = [dest for dest in destinations if len(dest) > 3]
     return list(destinations)
@@ -83,23 +82,19 @@ def visit_and_extract_descriptions(driver, url):
         for element in text_elements:
             try:
                 text = element.text
-                if len(text) > 200:
+                if 200 < len(text) <= 800:
                     doc = nlp(text)
                     title_candidates = [ent.text for ent in doc.ents if ent.label_ == "LOC"]
                     title = title_candidates[0] if title_candidates else "Titre non trouvé"
-                    descriptions_with_titles.append((title, text))
+                    if title != "Titre non trouvé" and len(title) >= 4:
+                        descriptions_with_titles.append((title, text))
             except StaleElementReferenceException:
-                continue  # Pass to next element if element is no longer valid
+                continue
     except StaleElementReferenceException:
         print("Un problème est survenu avec les éléments de la page.")
 
-    # Filter eventual duplicates
-    unique_descriptions_with_titles = []
-    for title, desc in descriptions_with_titles:
-        if (title, desc) not in unique_descriptions_with_titles:
-            unique_descriptions_with_titles.append((title, desc))
+    return descriptions_with_titles
 
-    return unique_descriptions_with_titles
 
 def main():
     chrome_options = Options()
@@ -120,7 +115,7 @@ def main():
         if descriptions_with_titles:
             print(f"\nURL: {url}")
             for title, description in descriptions_with_titles:
-                print(f"Titre: {title}\nDescription: {description}\n\n")
+                print(f"Titre: {title}\nDescription: {description[:500]}\n\n")
 
     save_urls_to_csv(urls)
 
