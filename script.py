@@ -70,12 +70,12 @@ def visit_and_extract_info(driver, url):
     all_text = " ".join([block.text for block in content_blocks if len(block.text) > 100])
     return all_text
 
-def visit_and_extract_descriptions(driver, url):
+def visit_and_extract_descriptions(driver, url, elimination_titles):
     driver.get(url)
     time.sleep(2)
 
     nlp = spacy.load("fr_core_news_sm")
-    seen = set()  # Set to keep track of unique titles and descriptions
+    seen_substrings = set()  # To keep track of unique 100-character substrings
     unique_descriptions_with_titles = []
 
     try:
@@ -87,11 +87,13 @@ def visit_and_extract_descriptions(driver, url):
                     doc = nlp(text)
                     title_candidates = [ent.text for ent in doc.ents if ent.label_ == "LOC"]
                     title = title_candidates[0] if title_candidates else "Titre non trouvé"
-                    if title != "Titre non trouvé" and len(title) >= 4:
-                        key = (title, text)  # Unique key to check for duplicates
-                        if key not in seen:  # Check uniqueness before adding
-                            seen.add(key)
-                            unique_descriptions_with_titles.append(key)
+                    if title.lower() not in [t.lower() for t in elimination_titles] and len(title) > 3:
+                        # Check for duplicates based on 100-character substrings
+                        is_unique = all(substring not in seen_substrings for substring in [text[i:i+100] for i in range(len(text)-100)])
+                        if is_unique:
+                            # Update viewed sub-chains
+                            [seen_substrings.add(text[i:i+100]) for i in range(len(text)-100)]
+                            unique_descriptions_with_titles.append((title, text[:500]))
             except StaleElementReferenceException:
                 continue
     except StaleElementReferenceException:
@@ -112,13 +114,20 @@ def main():
     search("les meilleures destinations de vacances", driver)
 
     urls = collect_urls(driver)
+    elimination_titles = ["Titre non trouvé", "types", "soleil", 
+                          "hôtel", "accepter", "vedette", "cliquez", 
+                          "désolés", "inscrivez", "besoin", "explore", 
+                          "enregistrer", "instagram", "lire le suivant", 
+                          "voulez", "coutumes", "sommes", "politique", 
+                          "saint-valentin", "continuer"]
 
     for url in urls:
-        descriptions_with_titles = visit_and_extract_descriptions(driver, url)
+        descriptions_with_titles = visit_and_extract_descriptions(driver, url, elimination_titles)
         if descriptions_with_titles:
             print(f"\nURL: {url}")
             for title, description in descriptions_with_titles:
-                print(f"Titre: {title}\nDescription: {description[:500]}\n\n")
+                print(f"Titre: {title}\nDescription: {description}\n\n")
+
 
     save_urls_to_csv(urls)
 
